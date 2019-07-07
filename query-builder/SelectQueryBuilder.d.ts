@@ -56,6 +56,10 @@ export declare class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> imp
      */
     addSelect(selection: string[]): this;
     /**
+     * Sets whether the selection is DISTINCT.
+     */
+    distinct(distinct?: boolean): this;
+    /**
      * Specifies FROM which entity's table select/update/delete will be executed.
      * Also sets a main string alias of the selection data.
      * Removes all previously set from-s.
@@ -481,7 +485,7 @@ export declare class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> imp
     /**
      * Sets locking mode.
      */
-    setLock(lockMode: "pessimistic_read" | "pessimistic_write"): this;
+    setLock(lockMode: "pessimistic_read" | "pessimistic_write" | "dirty_read"): this;
     /**
      * Gets first raw result returned by execution of generated query builder sql.
      */
@@ -580,11 +584,6 @@ export declare class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> imp
      * Loads raw results from the database.
      */
     protected loadRawResults(queryRunner: QueryRunner): Promise<any>;
-    /**
-     * Builds column alias from given alias name and column name,
-     * If alias length is more than 29, abbreviates column name.
-     */
-    protected buildColumnAlias(aliasName: string, columnName: string): string;
     /**
      * Merges into expression map given expression map properties.
      */

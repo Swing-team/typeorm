@@ -34,6 +34,10 @@ var QueryExpressionMap = /** @class */ (function () {
          */
         this.selects = [];
         /**
+         * Whether SELECT is DISTINCT.
+         */
+        this.selectDistinct = false;
+        /**
          * Extra returning columns to be added to the returning statement if driver supports it.
          */
         this.extraReturningColumns = [];
@@ -279,7 +283,7 @@ var QueryExpressionMap = /** @class */ (function () {
         map.updateEntity = this.updateEntity;
         map.callListeners = this.callListeners;
         map.useTransaction = this.useTransaction;
-        map.nativeParameters = this.nativeParameters;
+        map.nativeParameters = Object.assign({}, this.nativeParameters);
         return map;
     };
     return QueryExpressionMap;

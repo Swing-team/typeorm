@@ -7,6 +7,7 @@ var MongoQueryRunner_1 = require("./MongoQueryRunner");
 var PlatformTools_1 = require("../../platform/PlatformTools");
 var MongoSchemaBuilder_1 = require("../../schema-builder/MongoSchemaBuilder");
 var ObjectUtils_1 = require("../../util/ObjectUtils");
+var ApplyValueTransformers_1 = require("../../util/ApplyValueTransformers");
 /**
  * Organizes communication with MongoDB.
  */
@@ -63,7 +64,16 @@ var MongoDriver = /** @class */ (function () {
             cacheDuration: "int",
             cacheQuery: "int",
             cacheResult: "int",
+            metadataType: "int",
+            metadataDatabase: "int",
+            metadataSchema: "int",
+            metadataTable: "int",
+            metadataName: "int",
+            metadataValue: "int",
         };
+        // -------------------------------------------------------------------------
+        // Protected Properties
+        // -------------------------------------------------------------------------
         /**
          * Valid mongo connection options
          * NOTE: Keep sync with MongoConnectionOptions
@@ -211,7 +221,7 @@ var MongoDriver = /** @class */ (function () {
      */
     MongoDriver.prototype.preparePersistentValue = function (value, columnMetadata) {
         if (columnMetadata.transformer)
-            value = columnMetadata.transformer.to(value);
+            value = ApplyValueTransformers_1.ApplyValueTransformers.transformTo(columnMetadata.transformer, value);
         return value;
     };
     /**
@@ -219,7 +229,7 @@ var MongoDriver = /** @class */ (function () {
      */
     MongoDriver.prototype.prepareHydratedValue = function (value, columnMetadata) {
         if (columnMetadata.transformer)
-            value = columnMetadata.transformer.from(value);
+            value = ApplyValueTransformers_1.ApplyValueTransformers.transformFrom(columnMetadata.transformer, value);
         return value;
     };
     /**

@@ -17,6 +17,10 @@ import { EntityMetadata } from "../../metadata/EntityMetadata";
 export declare class MongoDriver implements Driver {
     protected connection: Connection;
     /**
+     * Underlying mongodb library.
+     */
+    mongodb: any;
+    /**
      * Mongodb does not require to dynamically create query runner each time,
      * because it does not have a regular connection pool as RDBMS systems have.
      */
@@ -67,9 +71,10 @@ export declare class MongoDriver implements Driver {
      */
     dataTypeDefaults: DataTypeDefaults;
     /**
-     * Underlying mongodb library.
+     * No documentation specifying a maximum length for identifiers could be found
+     * for MongoDB.
      */
-    mongodb: any;
+    maxAliasLength?: number;
     /**
      * Valid mongo connection options
      * NOTE: Keep sync with MongoConnectionOptions

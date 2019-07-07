@@ -37,6 +37,10 @@ export declare class QueryExpressionMap {
      */
     selects: SelectQuery[];
     /**
+     * Whether SELECT is DISTINCT.
+     */
+    selectDistinct: boolean;
+    /**
      * FROM-s to be selected.
      */
     /**
@@ -121,7 +125,7 @@ export declare class QueryExpressionMap {
     /**
      * Locking mode.
      */
-    lockMode?: "optimistic" | "pessimistic_read" | "pessimistic_write";
+    lockMode?: "optimistic" | "pessimistic_read" | "pessimistic_write" | "dirty_read";
     /**
      * Current version of the entity, used for locking.
      */

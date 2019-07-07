@@ -20,8 +20,8 @@ import { OracleDriver } from "../driver/oracle/OracleDriver";
 import { AbstractSqliteDriver } from "../driver/sqlite-abstract/AbstractSqliteDriver";
 import { OffsetWithoutLimitNotSupportedError } from "../error/OffsetWithoutLimitNotSupportedError";
 import { BroadcasterResult } from "../subscriber/BroadcasterResult";
-import { abbreviate } from "../util/StringUtils";
 import { ObjectUtils } from "../util/ObjectUtils";
+import { DriverUtils } from "../driver/DriverUtils";
 /**
  * Allows to build complex sql queries in a fashion way and execute those queries.
  */
@@ -98,6 +98,14 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
         else if (selection) {
             this.expressionMap.selects.push({ selection: selection, aliasName: selectionAliasName });
         }
+        return this;
+    };
+    /**
+     * Sets whether the selection is DISTINCT.
+     */
+    SelectQueryBuilder.prototype.distinct = function (distinct) {
+        if (distinct === void 0) { distinct = true; }
+        this.expressionMap.selectDistinct = distinct;
         return this;
     };
     /**
@@ -978,6 +986,9 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
                 case "pessimistic_write":
                     lock = " WITH (UPDLOCK, ROWLOCK)";
                     break;
+                case "dirty_read":
+                    lock = " WITH (NOLOCK)";
+                    break;
             }
         }
         // create a selection query
@@ -988,8 +999,9 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
                 return alias.subQuery + " " + _this.escape(alias.name);
             return _this.getTableName(alias.tablePath) + " " + _this.escape(alias.name);
         });
+        var select = "SELECT " + (this.expressionMap.selectDistinct ? "DISTINCT " : "");
         var selection = allSelects.map(function (select) { return select.selection + (select.aliasName ? " AS " + _this.escape(select.aliasName) : ""); }).join(", ");
-        return "SELECT " + selection + " FROM " + froms.join(", ") + lock;
+        return select + selection + " FROM " + froms.join(", ") + lock;
     };
     /**
      * Creates "JOIN" part of SQL query.
@@ -1240,7 +1252,7 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
             }
             return {
                 selection: selectionPath,
-                aliasName: selection && selection.aliasName ? selection.aliasName : _this.buildColumnAlias(aliasName, column.databaseName),
+                aliasName: selection && selection.aliasName ? selection.aliasName : DriverUtils.buildColumnAlias(_this.connection.driver, aliasName, column.databaseName),
                 // todo: need to keep in mind that custom selection.aliasName breaks hydrator. fix it later!
                 virtual: selection ? selection.virtual === true : (hasMainAlias ? false : true),
             };
@@ -1336,10 +1348,10 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
                         mainAliasName_1 = this.expressionMap.mainAlias.name;
                         querySelects = metadata_1.primaryColumns.map(function (primaryColumn) {
                             var distinctAlias = _this.escape("distinctAlias");
-                            var columnAlias = _this.escape(_this.buildColumnAlias(mainAliasName_1, primaryColumn.databaseName));
+                            var columnAlias = _this.escape(DriverUtils.buildColumnAlias(_this.connection.driver, mainAliasName_1, primaryColumn.databaseName));
                             if (!orderBys_1[columnAlias]) // make sure we aren't overriding user-defined order in inverse direction
                                 orderBys_1[columnAlias] = "ASC";
-                            return distinctAlias + "." + columnAlias + " as \"ids_" + _this.buildColumnAlias(mainAliasName_1, primaryColumn.databaseName) + "\"";
+                            return distinctAlias + "." + columnAlias + " as \"ids_" + DriverUtils.buildColumnAlias(_this.connection.driver, mainAliasName_1, primaryColumn.databaseName) + "\"";
                         });
                         return [4 /*yield*/, new SelectQueryBuilder(this.connection, queryRunner)
                                 .select("DISTINCT " + querySelects.join(", "))
@@ -1366,7 +1378,7 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
                             }).join(" OR ");
                         }
                         else {
-                            ids = rawResults.map(function (result) { return result["ids_" + _this.buildColumnAlias(mainAliasName_1, metadata_1.primaryColumns[0].databaseName)]; });
+                            ids = rawResults.map(function (result) { return result["ids_" + DriverUtils.buildColumnAlias(_this.connection.driver, mainAliasName_1, metadata_1.primaryColumns[0].databaseName)]; });
                             areAllNumbers = ids.every(function (id) { return typeof id === "number"; });
                             if (areAllNumbers) {
                                 // fixes #190. if all numbers then its safe to perform query without parameter
@@ -1425,7 +1437,7 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
                 var _a = tslib_1.__read(orderCriteria.split("."), 2), aliasName = _a[0], propertyPath = _a[1];
                 var alias = _this.expressionMap.findAliasByName(aliasName);
                 var column = alias.metadata.findColumnWithPropertyName(propertyPath);
-                return _this.escape(parentAlias) + "." + _this.escape(_this.buildColumnAlias(aliasName, column.databaseName));
+                return _this.escape(parentAlias) + "." + _this.escape(DriverUtils.buildColumnAlias(_this.connection.driver, aliasName, column.databaseName));
             }
             else {
                 if (_this.expressionMap.selects.find(function (select) { return select.selection === orderCriteria || select.aliasName === orderCriteria; }))
@@ -1440,7 +1452,7 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
                 var _a = tslib_1.__read(orderCriteria.split("."), 2), aliasName = _a[0], propertyPath = _a[1];
                 var alias = _this.expressionMap.findAliasByName(aliasName);
                 var column = alias.metadata.findColumnWithPropertyName(propertyPath);
-                orderByObject[_this.escape(parentAlias) + "." + _this.escape(_this.buildColumnAlias(aliasName, column.databaseName))] = orderBys[orderCriteria];
+                orderByObject[_this.escape(parentAlias) + "." + _this.escape(DriverUtils.buildColumnAlias(_this.connection.driver, aliasName, column.databaseName))] = orderBys[orderCriteria];
             }
             else {
                 if (_this.expressionMap.selects.find(function (select) { return select.selection === orderCriteria || select.aliasName === orderCriteria; })) {
@@ -1495,16 +1507,6 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
                 }
             });
         });
-    };
-    /**
-     * Builds column alias from given alias name and column name,
-     * If alias length is more than 29, abbreviates column name.
-     */
-    SelectQueryBuilder.prototype.buildColumnAlias = function (aliasName, columnName) {
-        var columnAliasName = aliasName + "_" + columnName;
-        if (columnAliasName.length > 29 && this.connection.driver instanceof OracleDriver)
-            return aliasName + "_" + abbreviate(columnName, 2);
-        return columnAliasName;
     };
     /**
      * Merges into expression map given expression map properties.

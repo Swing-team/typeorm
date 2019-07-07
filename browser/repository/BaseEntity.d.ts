@@ -30,11 +30,11 @@ export declare class BaseEntity {
      * Saves current entity in the database.
      * If entity does not exist in the database then inserts, otherwise updates.
      */
-    save(): Promise<this>;
+    save(options?: SaveOptions): Promise<this>;
     /**
      * Removes current entity from the database.
      */
-    remove(): Promise<this>;
+    remove(options?: RemoveOptions): Promise<this>;
     /**
      * Reloads entity data from the database.
      */

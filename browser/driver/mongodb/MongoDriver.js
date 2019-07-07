@@ -5,6 +5,7 @@ import { MongoQueryRunner } from "./MongoQueryRunner";
 import { PlatformTools } from "../../platform/PlatformTools";
 import { MongoSchemaBuilder } from "../../schema-builder/MongoSchemaBuilder";
 import { ObjectUtils } from "../../util/ObjectUtils";
+import { ApplyValueTransformers } from "../../util/ApplyValueTransformers";
 /**
  * Organizes communication with MongoDB.
  */
@@ -61,7 +62,16 @@ var MongoDriver = /** @class */ (function () {
             cacheDuration: "int",
             cacheQuery: "int",
             cacheResult: "int",
+            metadataType: "int",
+            metadataDatabase: "int",
+            metadataSchema: "int",
+            metadataTable: "int",
+            metadataName: "int",
+            metadataValue: "int",
         };
+        // -------------------------------------------------------------------------
+        // Protected Properties
+        // -------------------------------------------------------------------------
         /**
          * Valid mongo connection options
          * NOTE: Keep sync with MongoConnectionOptions
@@ -209,7 +219,7 @@ var MongoDriver = /** @class */ (function () {
      */
     MongoDriver.prototype.preparePersistentValue = function (value, columnMetadata) {
         if (columnMetadata.transformer)
-            value = columnMetadata.transformer.to(value);
+            value = ApplyValueTransformers.transformTo(columnMetadata.transformer, value);
         return value;
     };
     /**
@@ -217,7 +227,7 @@ var MongoDriver = /** @class */ (function () {
      */
     MongoDriver.prototype.prepareHydratedValue = function (value, columnMetadata) {
         if (columnMetadata.transformer)
-            value = columnMetadata.transformer.from(value);
+            value = ApplyValueTransformers.transformFrom(columnMetadata.transformer, value);
         return value;
     };
     /**

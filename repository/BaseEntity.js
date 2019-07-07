@@ -23,14 +23,14 @@ var BaseEntity = /** @class */ (function () {
      * Saves current entity in the database.
      * If entity does not exist in the database then inserts, otherwise updates.
      */
-    BaseEntity.prototype.save = function () {
-        return this.constructor.getRepository().save(this);
+    BaseEntity.prototype.save = function (options) {
+        return this.constructor.getRepository().save(this, options);
     };
     /**
      * Removes current entity from the database.
      */
-    BaseEntity.prototype.remove = function () {
-        return this.constructor.getRepository().remove(this);
+    BaseEntity.prototype.remove = function (options) {
+        return this.constructor.getRepository().remove(this, options);
     };
     /**
      * Reloads entity data from the database.
