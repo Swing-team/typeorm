@@ -88,7 +88,7 @@ var MaterializedPathSubjectExecutor = /** @class */ (function () {
                                 .createQueryBuilder()
                                 .select(materializedPathColumn, "path")
                                 .from(subject.metadata.target, subject.metadata.targetName)
-                                .where(subject.identifier)
+                                .where({ id: subject.identifier.id })
                                 .getRawOne()
                                 .then(function (result) { return result ? result["path"] : undefined; })];
                     case 3:
@@ -98,7 +98,7 @@ var MaterializedPathSubjectExecutor = /** @class */ (function () {
                                 .createQueryBuilder()
                                 .update(subject.metadata.target)
                                 .set((_a = {}, _a[materializedPathColumn] = function () { return "REPLACE(" + materializedPathColumn + ", :oldPath, :newPath)"; }, _a))
-                                .where(materializedPathColumn + " LIKE CONCAT(:oldPath, '%')")
+                                .where(materializedPathColumn + " LIKE '" + oldPath + "%'")
                                 .setParameter("oldPath", oldPath)
                                 .setParameter("newPath", newPath)
                                 .execute()];
